@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sovereign Intelligence System — Build Your Own 100% Sovereign AI System</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d1117; color: #e6edf3; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; overflow-x: hidden; }
+
+  /* ─── HEADER ─── */
+  .header { position: fixed; top: 0; left: 0; right: 0; height: 48px; background: #161b22; border-bottom: 1px solid #30363d; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; z-index: 300; }
+  .header .logo { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 600; color: #e6edf3; text-decoration: none; }
+  .header .logo span { font-size: 1.2rem; }
+  .header .nav-r { display: flex; align-items: center; gap: 14px; }
+  .header .nav-r a { font-size: 0.72rem; color: #8b949e; text-decoration: none; }
+  .header .nav-r a:hover { color: #e6edf3; }
+
+  /* ─── PROGRESS DOTS (top) ─── */
+  .progress-dots { position: fixed; top: 48px; left: 0; right: 0; height: 36px; background: #0d1117; border-bottom: 1px solid #1c2128; display: flex; align-items: center; justify-content: center; gap: 8px; z-index: 200; }
+  .pdot { width: 10px; height: 10px; border-radius: 50%; background: #21262d; border: 2px solid #30363d; transition: all 0.4s; cursor: pointer; }
+  .pdot.active { background: #58a6ff; border-color: #58a6ff; box-shadow: 0 0 8px rgba(88,166,255,0.4); }
+  .pdot.done { background: #3fb950; border-color: #3fb950; }
+  .pdot-label { position: absolute; margin-top: 32px; font-size: 0.55rem; color: #484f58; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.2s; }
+  .pdot:hover .pdot-label { opacity: 1; }
+
+  /* ─── SLIDES CONTAINER ─── */
+  .slides { margin-top: 84px; scroll-snap-type: y mandatory; overflow-y: auto; height: calc(100vh - 84px); }
+  .slide { min-height: calc(100vh - 84px); scroll-snap-align: start; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 32px; position: relative; }
+
+  /* ─── SLIDE 1: HERO ─── */
+  .s-hero .big-emoji { font-size: 4rem; margin-bottom: 16px; }
+  .s-hero h1 { font-size: 2rem; font-weight: 800; text-align: center; line-height: 1.3; margin-bottom: 12px; }
+  .s-hero h1 em { font-style: normal; color: #58a6ff; }
+  .s-hero .sub { font-size: 1rem; color: #8b949e; text-align: center; max-width: 500px; line-height: 1.6; margin-bottom: 32px; }
+  .start-btn { padding: 14px 40px; background: linear-gradient(135deg, #58a6ff, #a371f7); color: #fff; font-size: 1rem; font-weight: 600; border: none; border-radius: 12px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+  .start-btn:hover { transform: scale(1.05); box-shadow: 0 6px 24px rgba(88,166,255,0.3); }
+  .scroll-hint { position: absolute; bottom: 24px; font-size: 0.7rem; color: #484f58; animation: bounce 2s infinite; }
+  @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
+
+  /* ─── SLIDE 2: THE QUESTION ─── */
+  .s-question .q-card { background: #161b22; border: 1px solid #30363d; border-radius: 16px; padding: 40px 48px; text-align: center; max-width: 560px; }
+  .s-question .q-card .q-emoji { font-size: 2.4rem; margin-bottom: 12px; }
+  .s-question .q-card h2 { font-size: 1.3rem; margin-bottom: 10px; color: #e6edf3; }
+  .s-question .q-card p { font-size: 0.88rem; color: #8b949e; line-height: 1.6; }
+
+  /* ─── SLIDE 3: WHAT WE FOUND (interactive) ─── */
+  .s-found { gap: 24px; }
+  .s-found h2 { font-size: 1.1rem; color: #3fb950; margin-bottom: 4px; }
+  .s-found .found-sub { font-size: 0.8rem; color: #484f58; margin-bottom: 20px; }
+  .crate-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; max-width: 560px; width: 100%; }
+  .crate { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 16px; text-align: center; cursor: pointer; transition: all 0.3s; position: relative; }
+  .crate:hover { border-color: #3fb950; transform: translateY(-2px); box-shadow: 0 4px 16px rgba(63,185,80,0.15); }
+  .crate.revealed { border-color: #3fb950; background: #1a2b1a; }
+  .crate .c-icon { font-size: 1.5rem; margin-bottom: 6px; }
+  .crate .c-name { font-size: 0.75rem; font-weight: 600; color: #e6edf3; margin-bottom: 4px; }
+  .crate .c-desc { font-size: 0.62rem; color: #484f58; line-height: 1.3; transition: color 0.3s; }
+  .crate.revealed .c-desc { color: #3fb950; }
+  .found-counter { font-size: 0.72rem; color: #484f58; margin-top: 16px; }
+  .found-counter span { color: #3fb950; font-weight: 700; }
+
+  /* ─── SLIDE 4: WHAT WE PLUGGED IN ─── */
+  .s-plugged { gap: 24px; }
+  .s-plugged h2 { font-size: 1.1rem; color: #a371f7; margin-bottom: 4px; }
+  .s-plugged .plug-sub { font-size: 0.8rem; color: #484f58; margin-bottom: 20px; }
+  .plug-row { display: flex; gap: 16px; max-width: 560px; width: 100%; }
+  .plug-card { flex: 1; background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 20px; text-align: center; transition: all 0.5s; opacity: 0; transform: translateY(16px); }
+  .plug-card.show { opacity: 1; transform: translateY(0); }
+  .plug-card .p-icon { font-size: 1.8rem; margin-bottom: 8px; }
+  .plug-card .p-name { font-size: 0.82rem; font-weight: 600; color: #e6edf3; margin-bottom: 4px; }
+  .plug-card .p-desc { font-size: 0.68rem; color: #8b949e; line-height: 1.4; }
+  .plug-btn { margin-top: 8px; padding: 10px 28px; background: #21262d; border: 1px solid #30363d; color: #a371f7; font-size: 0.82rem; font-weight: 600; border-radius: 10px; cursor: pointer; transition: all 0.2s; }
+  .plug-btn:hover { border-color: #a371f7; background: #231a33; }
+
+  /* ─── SLIDE 5: THE FORMULA ─── */
+  .s-formula { gap: 20px; }
+  .formula-box { display: flex; align-items: center; gap: 16px; }
+  .f-part { background: #161b22; border-radius: 14px; padding: 20px 24px; text-align: center; min-width: 140px; transition: all 0.4s; opacity: 0; transform: scale(0.9); }
+  .f-part.show { opacity: 1; transform: scale(1); }
+  .f-part .f-icon { font-size: 1.8rem; margin-bottom: 6px; }
+  .f-part .f-label { font-size: 0.78rem; font-weight: 600; }
+  .f-part .f-sub { font-size: 0.6rem; color: #484f58; margin-top: 2px; }
+  .f-chassis { border: 2px solid #3fb950; }
+  .f-chassis .f-label { color: #3fb950; }
+  .f-engine { border: 2px solid #a371f7; }
+  .f-engine .f-label { color: #a371f7; }
+  .f-result { border: 2px solid #58a6ff; }
+  .f-result .f-label { color: #58a6ff; }
+  .f-op { font-size: 1.6rem; color: #484f58; font-weight: 700; opacity: 0; transition: opacity 0.4s; }
+  .f-op.show { opacity: 1; }
+  .formula-caption { font-size: 0.82rem; color: #8b949e; text-align: center; max-width: 440px; line-height: 1.6; opacity: 0; transition: opacity 0.5s; margin-top: 8px; }
+  .formula-caption.show { opacity: 1; }
+  .formula-caption strong { color: #58a6ff; }
+
+  /* ─── SLIDE 6: CTA ─── */
+  .s-cta .cta-card { background: linear-gradient(135deg, #161b22, #1a2332); border: 1px solid #30363d; border-radius: 20px; padding: 48px; text-align: center; max-width: 480px; }
+  .s-cta .cta-card .cta-emoji { font-size: 3rem; margin-bottom: 12px; }
+  .s-cta .cta-card h2 { font-size: 1.3rem; margin-bottom: 8px; }
+  .s-cta .cta-card p { font-size: 0.85rem; color: #8b949e; margin-bottom: 24px; line-height: 1.6; }
+  .cta-btn { padding: 14px 40px; background: linear-gradient(135deg, #3fb950, #58a6ff); color: #fff; font-size: 1rem; font-weight: 700; border: none; border-radius: 12px; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+  .cta-btn:hover { transform: scale(1.05); box-shadow: 0 6px 24px rgba(63,185,80,0.3); }
+  .badge-row { display: flex; gap: 10px; justify-content: center; margin-top: 20px; }
+  .badge { font-size: 0.6rem; padding: 4px 10px; border-radius: 10px; }
+  .badge-g { background: #1a2b1a; color: #3fb950; border: 1px solid #1f3f1f; }
+  .badge-b { background: #1a2332; color: #58a6ff; border: 1px solid #1f3a5f; }
+  .badge-p { background: #231a33; color: #a371f7; border: 1px solid #2f1f4f; }
+</style>
+</head>
+<body>
+
+<!-- ─── HEADER ─── -->
+<header class="header">
+  <a class="logo" href="#">Sovereign Intelligence System</a>
+  <div class="nav-r">
+    <a href="https://github.com/ultraworkers/claw-code" target="_blank">GitHub</a>
+  </div>
+</header>
+
+<!-- ─── PROGRESS DOTS ─── -->
+<nav class="progress-dots" id="progressDots">
+  <div class="pdot active" onclick="goSlide(0)" style="position:relative"><span class="pdot-label">Start</span></div>
+  <div class="pdot" onclick="goSlide(1)" style="position:relative"><span class="pdot-label">The Question</span></div>
+  <div class="pdot" onclick="goSlide(2)" style="position:relative"><span class="pdot-label">What We Found</span></div>
+  <div class="pdot" onclick="goSlide(3)" style="position:relative"><span class="pdot-label">What We Plugged In</span></div>
+  <div class="pdot" onclick="goSlide(4)" style="position:relative"><span class="pdot-label">The Formula</span></div>
+  <div class="pdot" onclick="goSlide(5)" style="position:relative"><span class="pdot-label">Start Building</span></div>
+</nav>
+
+<!-- ─── SLIDES ─── -->
+<div class="slides" id="slides">
+
+  <!-- SLIDE 0: SOVEREIGN HERO -->
+  <section class="slide" id="slide-sovereign" style="background:linear-gradient(180deg,#161b22 0%,#0d1117 100%);">
+    <div style="display:inline-block;font-size:0.7rem;padding:4px 14px;border-radius:20px;background:#1a2b1a;color:#3fb950;border:1px solid #1f3f1f;margin-bottom:20px;">🔓 100% Local · Zero Cloud · Zero API Keys</div>
+    <h1 style="font-size:2.4rem;font-weight:800;line-height:1.25;margin-bottom:16px;">Build a Completely<br><em style="font-style:normal;background:linear-gradient(135deg,#58a6ff,#a371f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Sovereign AI System</em></h1>
+    <p style="font-size:1.05rem;color:#8b949e;max-width:540px;margin:0 auto 32px;text-align:center;">Reverse-engineer how AI coding agents work. Then build your own — from scratch — running entirely on your machine. No cloud, no subscriptions, no black boxes.</p>
+    <div class="scroll-hint" style="margin-top:40px;">↓ scroll</div>
+  </section>
+
+  <!-- SLIDE 1: HERO -->
+  <section class="slide s-hero" id="slide0">
+    <h1>Build Your Own<br><em>AI 100% Sovereign</em></h1>
+    <p class="sub">Learn from the open-source Claude repo about building your own 100% Local Agentic System.</p>
+    <button class="start-btn" onclick="goSlide(1)">Let's go →</button>
+    <div class="scroll-hint">↓ scroll or click</div>
+  </section>
+
+  <!-- SLIDE 2: THE QUESTION -->
+  <section class="slide s-question" id="slide1">
+    <div class="q-card">
+      <div class="q-emoji">🤔</div>
+      <h2>What if you could look inside<br>Claude Code?</h2>
+      <p>It's an AI that reads your files, writes code, and runs commands. But how? We opened the codebase and found two things:</p>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: WHAT WE FOUND (tap to reveal) -->
+  <section class="slide s-found" id="slide2">
+    <h2>🔍 What we found in the codebase</h2>
+    <p class="found-sub">Tap each piece to reveal what it does</p>
+    <div class="crate-grid" id="crateGrid">
+      <div class="crate" onclick="revealCrate(this)">
+        <div class="c-icon">🔄</div>
+        <div class="c-name">The Loop</div>
+        <div class="c-desc">Ask → tool call → result → repeat</div>
+      </div>
+      <div class="crate" onclick="revealCrate(this)">
+        <div class="c-icon">🔧</div>
+        <div class="c-name">Tool Registry</div>
+        <div class="c-desc">184 tools the AI can call</div>
+      </div>
+      <div class="crate" onclick="revealCrate(this)">
+        <div class="c-icon">🔒</div>
+        <div class="c-name">Permissions</div>
+        <div class="c-desc">Controls which tools are allowed</div>
+      </div>
+      <div class="crate" onclick="revealCrate(this)">
+        <div class="c-icon">💾</div>
+        <div class="c-name">Sessions</div>
+        <div class="c-desc">Save & resume conversations</div>
+      </div>
+      <div class="crate" onclick="revealCrate(this)">
+        <div class="c-icon">📝</div>
+        <div class="c-name">System Prompt</div>
+        <div class="c-desc">Hidden instructions for the AI</div>
+      </div>
+      <div class="crate" onclick="revealCrate(this)">
+        <div class="c-icon">📜</div>
+        <div class="c-name">Transcripts</div>
+        <div class="c-desc">Full log of everything that happened</div>
+      </div>
+      <div class="crate" onclick="revealCrate(this)">
+        <div class="c-icon">🗜️</div>
+        <div class="c-name">Compaction</div>
+        <div class="c-desc">Summarize old turns to save memory</div>
+      </div>
+      <div class="crate" onclick="revealCrate(this)">
+        <div class="c-icon">💰</div>
+        <div class="c-name">Cost Tracking</div>
+        <div class="c-desc">Count every token used</div>
+      </div>
+      <div class="crate" onclick="revealCrate(this)">
+        <div class="c-icon">⚡</div>
+        <div class="c-name">Streaming</div>
+        <div class="c-desc">Show words as they arrive</div>
+      </div>
+    </div>
+    <div class="found-counter"><span id="revealCount">0</span> / 9 discovered</div>
+  </section>
+
+  <!-- SLIDE 4: WHAT WE PLUGGED IN -->
+  <section class="slide s-plugged" id="slide3">
+    <h2>🔌 What we plugged in ourselves</h2>
+    <p class="plug-sub">The codebase had the chassis. We dropped in our own engine.</p>
+    <div class="plug-row" id="plugRow">
+      <div class="plug-card" id="plug0">
+        <div class="p-icon">🦙</div>
+        <div class="p-name">Ollama</div>
+        <div class="p-desc">Runs AI models locally on your machine. Replaces Anthropic's cloud.</div>
+      </div>
+      <div class="plug-card" id="plug1">
+        <div class="p-icon">🧠</div>
+        <div class="p-name">qwen2.5:7b</div>
+        <div class="p-desc">A 7B parameter brain. Free, local, no API key needed.</div>
+      </div>
+      <div class="plug-card" id="plug2">
+        <div class="p-icon">🐍</div>
+        <div class="p-name">80 lines of Python</div>
+        <div class="p-desc">4 real tools: read files, write files, run commands, search code.</div>
+      </div>
+    </div>
+    <button class="plug-btn" id="plugBtn" onclick="revealPlugs()">🔌 Plug it in</button>
+  </section>
+
+  <!-- SLIDE 5: THE FORMULA -->
+  <section class="slide s-formula" id="slide4">
+    <div class="formula-box" id="formulaBox">
+      <div class="f-part f-chassis" id="fChassis">
+        <div class="f-icon">🏗️</div>
+        <div class="f-label">The Chassis</div>
+        <div class="f-sub">from the repo</div>
+      </div>
+      <div class="f-op" id="fPlus">+</div>
+      <div class="f-part f-engine" id="fEngine">
+        <div class="f-icon">🧠</div>
+        <div class="f-label">Your Engine</div>
+        <div class="f-sub">local LLM</div>
+      </div>
+      <div class="f-op" id="fEquals">=</div>
+      <div class="f-part f-result" id="fResult">
+        <div class="f-icon">🦀</div>
+        <div class="f-label">Local Clawd</div>
+        <div class="f-sub">your own coding agent</div>
+      </div>
+    </div>
+    <p class="formula-caption" id="formulaCaption">The repo taught us the <strong>chassis</strong>. We dropped in our own <strong>engine</strong>. That's the whole trick — the engineering around the model is 90% of a coding agent. The model itself is swappable.</p>
+  </section>
+
+  <!-- SLIDE 6: CTA -->
+  <section class="slide s-cta" id="slide5">
+    <div class="cta-card">
+      <div class="cta-emoji">🚀</div>
+      <h2>Ready to build yours?</h2>
+      <p>7 acts. From zero to a working coding agent on your laptop. No cloud, no API keys, no frameworks.</p>
+      <button class="cta-btn" onclick="window.location.href='../level-1-beginner/a1_high_level_diagram.html'">Sovereignty vs Capability</button>
+      <p style="font-size:0.72rem;color:#484f58;margin-top:10px;">Confidence Scores</p>
+      <div class="badge-row">
+        <span class="badge badge-g">🐍 Python 3</span>
+        <span class="badge badge-p">🦙 Ollama</span>
+        <span class="badge badge-b">⏱ ~3 hours total</span>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+// ─── SLIDE NAVIGATION ───
+const slides = document.getElementById('slides');
+const dots = document.querySelectorAll('.pdot');
+let currentSlide = 0;
+
+function goSlide(i) {
+  document.getElementById('slide' + i).scrollIntoView({ behavior: 'smooth' });
+}
+
+// Update dots on scroll
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const i = parseInt(e.target.id.replace('slide', ''));
+      currentSlide = i;
+      dots.forEach((d, j) => {
+        d.classList.remove('active');
+        if (j < i) d.classList.add('done');
+        if (j === i) { d.classList.add('active'); d.classList.remove('done'); }
+        if (j > i) d.classList.remove('done');
+      });
+      // Trigger slide-specific animations
+      if (i === 3) revealPlugsAuto();
+      if (i === 4) runFormula();
+    }
+  });
+}, { threshold: 0.6 });
+
+document.querySelectorAll('.slide').forEach(s => observer.observe(s));
+
+// ─── CRATE REVEAL (Slide 3) ───
+let revealed = 0;
+function revealCrate(el) {
+  if (el.classList.contains('revealed')) return;
+  el.classList.add('revealed');
+  revealed++;
+  document.getElementById('revealCount').textContent = revealed;
+  if (revealed === 9) {
+    document.getElementById('revealCount').parentElement.innerHTML = '<span>✅ All 9 discovered!</span> This is the chassis.';
+  }
+}
+
+// ─── PLUG REVEAL (Slide 4) ───
+let plugsRevealed = false;
+function revealPlugs() {
+  if (plugsRevealed) return;
+  plugsRevealed = true;
+  document.getElementById('plugBtn').style.display = 'none';
+  [0, 1, 2].forEach((i) => {
+    setTimeout(() => {
+      document.getElementById('plug' + i).classList.add('show');
+    }, i * 400);
+  });
+}
+function revealPlugsAuto() {
+  if (!plugsRevealed) revealPlugs();
+}
+
+// ─── FORMULA ANIMATION (Slide 5) ───
+let formulaRan = false;
+function runFormula() {
+  if (formulaRan) return;
+  formulaRan = true;
+  const seq = [
+    { delay: 0,    id: 'fChassis' },
+    { delay: 600,  id: 'fPlus' },
+    { delay: 1200, id: 'fEngine' },
+    { delay: 1800, id: 'fEquals' },
+    { delay: 2400, id: 'fResult' },
+    { delay: 3200, id: 'formulaCaption' },
+  ];
+  seq.forEach(s => {
+    setTimeout(() => document.getElementById(s.id).classList.add('show'), s.delay);
+  });
+}
+</script>
+
+</body>
+</html>
