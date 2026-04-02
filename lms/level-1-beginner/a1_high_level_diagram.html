@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>🦀 Claw Code Academy — Act 1: High-Level Architecture</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d1117; color: #e6edf3; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; overflow-x: hidden; }
+
+  /* ─── SITE HEADER ─── */
+  .site-header { position: fixed; top: 0; left: 0; right: 0; height: 52px; background: #161b22; border-bottom: 1px solid #30363d; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 300; }
+  .site-header .logo { display: flex; align-items: center; gap: 10px; font-size: 0.88rem; font-weight: 600; color: #e6edf3; text-decoration: none; }
+  .site-header .logo span { font-size: 1.3rem; }
+  .site-header .course-title { font-size: 0.72rem; color: #8b949e; position: absolute; left: 50%; transform: translateX(-50%); }
+  .site-header .header-right { display: flex; align-items: center; gap: 16px; }
+  .site-header nav a { font-size: 0.75rem; color: #8b949e; text-decoration: none; transition: color 0.2s; }
+  .site-header nav a:hover { color: #e6edf3; }
+  .info-btn { width: 32px; height: 32px; border-radius: 50%; background: #21262d; border: 1px solid #30363d; color: #58a6ff; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+  .info-btn:hover { border-color: #58a6ff; transform: scale(1.1); }
+
+  /* ─── LEFT SIDEBAR (chapters + progress) ─── */
+  .sidebar { position: fixed; top: 52px; left: 0; width: 260px; height: calc(100vh - 52px - 56px); background: #161b22; border-right: 1px solid #30363d; overflow-y: auto; z-index: 100; padding: 20px 0; }
+  .sidebar-heading { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.5px; color: #484f58; padding: 0 20px; margin-bottom: 12px; }
+  .progress-bar-wrap { padding: 0 20px; margin-bottom: 20px; }
+  .progress-bar { height: 4px; background: #21262d; border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; width: 14%; background: linear-gradient(90deg, #58a6ff, #a371f7); border-radius: 2px; transition: width 0.4s; }
+  .progress-label { font-size: 0.65rem; color: #484f58; margin-top: 6px; }
+  .chapter-list { list-style: none; }
+  .chapter-list li { border-left: 3px solid transparent; }
+  .chapter-list li.active { border-left-color: #58a6ff; background: rgba(88,166,255,0.06); }
+  .chapter-list li.completed { border-left-color: #3fb950; }
+  .chapter-list a { display: flex; align-items: flex-start; gap: 10px; padding: 10px 20px; text-decoration: none; transition: background 0.15s; }
+  .chapter-list a:hover { background: rgba(255,255,255,0.03); }
+  .ch-icon { font-size: 0.85rem; margin-top: 1px; flex-shrink: 0; }
+  .ch-text { display: flex; flex-direction: column; }
+  .ch-act { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; color: #484f58; }
+  .ch-title { font-size: 0.78rem; color: #8b949e; line-height: 1.3; }
+  .chapter-list li.active .ch-title { color: #e6edf3; font-weight: 600; }
+  .chapter-list li.completed .ch-title { color: #3fb950; }
+  .ch-status { font-size: 0.6rem; color: #484f58; margin-top: 2px; }
+  .chapter-list li.active .ch-status { color: #58a6ff; }
+  .chapter-list li.completed .ch-status { color: #3fb950; }
+
+  /* ─── MAIN CONTENT ─── */
+  .content { margin-left: 260px; margin-top: 52px; margin-bottom: 56px; padding: 0; transition: margin-right 0.3s; min-height: calc(100vh - 52px - 56px); }
+  body.panel-open .content { margin-right: 340px; }
+
+  /* Hero */
+  .hero { padding: 40px 48px 32px; border-bottom: 1px solid #30363d; background: linear-gradient(180deg, #161b22 0%, #0d1117 100%); }
+  .hero .breadcrumb { font-size: 0.68rem; color: #484f58; margin-bottom: 12px; }
+  .hero .breadcrumb a { color: #58a6ff; text-decoration: none; }
+  .hero .breadcrumb span { margin: 0 6px; }
+  .hero h1 { font-size: 1.4rem; color: #e6edf3; font-weight: 700; margin-bottom: 6px; }
+  .hero h1 em { font-style: normal; color: #58a6ff; }
+  .hero p { font-size: 0.85rem; color: #8b949e; }
+  .hero .lesson-meta { display: flex; gap: 16px; margin-top: 14px; }
+  .hero .meta-tag { font-size: 0.65rem; color: #484f58; display: flex; align-items: center; gap: 4px; }
+
+  /* Lesson body */
+  .lesson { max-width: 780px; margin: 0 auto; padding: 40px 48px 60px; }
+  .section-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 1.5px; color: #484f58; margin-bottom: 24px; }
+
+  /* Flow diagram */
+  .flow { display: flex; align-items: center; justify-content: center; gap: 0; margin-bottom: 48px; }
+  .box { border-radius: 16px; padding: 24px 28px; text-align: center; transition: transform 0.2s, box-shadow 0.2s; cursor: default; }
+  .box:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(0,0,0,0.4); }
+  .box h2 { font-size: 1.05rem; margin-bottom: 5px; }
+  .box p { font-size: 0.75rem; color: #8b949e; line-height: 1.4; }
+  .you { background: #1a1f2b; border: 2px solid #58a6ff; min-width: 140px; }
+  .you h2 { color: #58a6ff; }
+  .box .icon { font-size: 2rem; margin-bottom: 6px; }
+  .agent { background: #1a1f2b; border: 2px solid #f0883e; min-width: 150px; }
+  .agent h2 { color: #f0883e; }
+  .llm { background: #1a1f2b; border: 2px solid #a371f7; min-width: 160px; }
+  .llm h2 { color: #a371f7; }
+  .arrow { display: flex; flex-direction: column; align-items: center; width: 80px; }
+  .arrow-line { font-size: 1.4rem; color: #484f58; letter-spacing: -2px; }
+  .arrow-label { font-size: 0.62rem; color: #8b949e; margin-top: 2px; text-align: center; }
+
+  /* Agent loop */
+  .loop-section { margin-top: 8px; }
+  .loop-section h3 { font-size: 0.95rem; color: #58a6ff; margin-bottom: 16px; text-align: center; }
+
+  /* Arrow glow */
+  .arrow.lit .arrow-line { color: #3fb950 !important; }
+  .arrow.lit .arrow-label { color: #3fb950 !important; }
+
+  /* Floating tooltip that travels across boxes */
+  .msg-tooltip { position: absolute; background: #1a2332; border: 1px solid #58a6ff; color: #58a6ff; font-size: 0.72rem; padding: 6px 12px; border-radius: 8px; white-space: nowrap; max-width: 220px; overflow: hidden; text-overflow: ellipsis; pointer-events: none; z-index: 50; opacity: 0; transition: opacity 0.3s; }
+  .msg-tooltip::after { content: ''; position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%); border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 5px solid #58a6ff; }
+  .msg-tooltip.show { opacity: 1; }
+
+  /* Chat input area */
+  .chat-input-wrap { margin-top: 32px; display: flex; align-items: center; gap: 10px; max-width: 560px; margin-left: auto; margin-right: auto; }
+  .chat-input { flex: 1; background: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 12px 16px; color: #e6edf3; font-size: 0.85rem; font-family: inherit; outline: none; transition: border-color 0.2s; }
+  .chat-input::placeholder { color: #484f58; }
+  .chat-input:focus { border-color: #58a6ff; }
+  .chat-send { width: 40px; height: 40px; border-radius: 10px; background: #58a6ff; border: none; color: #fff; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
+  .chat-send:hover { background: #79c0ff; transform: scale(1.05); }
+  .chat-send:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+  .chat-send.pulse { animation: sendPulse 1.5s infinite; }
+  @keyframes sendPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(88,166,255,0.5); } 50% { box-shadow: 0 0 14px 4px rgba(88,166,255,0.4); } }
+  .loop { display: flex; align-items: center; justify-content: center; gap: 0; flex-wrap: wrap; }
+  .step { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 14px 16px; text-align: center; min-width: 115px; max-width: 140px; }
+  .step .num { font-size: 1.3rem; font-weight: 700; margin-bottom: 3px; }
+  .step p { font-size: 0.7rem; color: #8b949e; }
+  .s1 .num { color: #58a6ff; }
+  .s2 .num { color: #f0883e; }
+  .s3 .num { color: #a371f7; }
+  .s4 .num { color: #f0883e; }
+  .s5 .num { color: #3fb950; }
+  .mini-arrow { color: #484f58; font-size: 1.3rem; padding: 0 4px; }
+  .loop-back { margin-top: 14px; text-align: center; font-size: 0.72rem; color: #8b949e; }
+  .loop-back span { color: #a371f7; font-weight: 600; }
+
+  /* Takeaway box */
+  .takeaway { margin-top: 48px; background: #161b22; border: 1px solid #30363d; border-left: 3px solid #3fb950; border-radius: 8px; padding: 20px 24px; }
+  .takeaway h4 { font-size: 0.78rem; color: #3fb950; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+  .takeaway p { font-size: 0.82rem; color: #8b949e; line-height: 1.7; }
+
+
+
+  /* Step highlight on diagram */
+  .glow-you { box-shadow: 0 0 20px rgba(88,166,255,0.5) !important; border-color: #79c0ff !important; }
+  .glow-agent { box-shadow: 0 0 20px rgba(240,136,62,0.5) !important; border-color: #f9a85c !important; }
+  .glow-llm { box-shadow: 0 0 20px rgba(163,113,247,0.5) !important; border-color: #bc8cff !important; }
+
+  /* ─── RIGHT PANEL (ⓘ) ─── */
+  .panel { position: fixed; top: 52px; right: -340px; width: 340px; height: calc(100vh - 52px - 56px); background: #161b22; border-left: 1px solid #30363d; padding: 24px 20px; display: flex; flex-direction: column; gap: 18px; overflow-y: auto; transition: right 0.3s; z-index: 100; }
+  body.panel-open .panel { right: 0; }
+  .panel h2 { font-size: 0.9rem; color: #58a6ff; }
+  .panel-section { border-top: 1px solid #30363d; padding-top: 14px; }
+  .panel-section h3 { font-size: 0.68rem; color: #f0883e; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+  .panel-section p { font-size: 0.74rem; color: #8b949e; line-height: 1.6; }
+  .panel-section ul { list-style: none; padding: 0; }
+  .panel-section li { font-size: 0.74rem; color: #8b949e; padding: 2px 0; line-height: 1.5; }
+  .panel-section li::before { content: "→ "; color: #484f58; }
+  .tag { display: inline-block; font-size: 0.6rem; padding: 2px 7px; border-radius: 10px; margin: 2px; }
+  .tag-blue { background: #1a2332; color: #58a6ff; border: 1px solid #1f3a5f; }
+  .tag-green { background: #1a2b1a; color: #3fb950; border: 1px solid #1f3f1f; }
+  .tag-purple { background: #231a33; color: #a371f7; border: 1px solid #2f1f4f; }
+  .tag-orange { background: #2b1f1a; color: #f0883e; border: 1px solid #3f2a1f; }
+
+  /* ─── FOOTER NAV ─── */
+  .footer-nav { position: fixed; bottom: 0; left: 260px; right: 0; height: 56px; background: #161b22; border-top: 1px solid #30363d; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; z-index: 200; transition: right 0.3s; }
+  body.panel-open .footer-nav { right: 340px; }
+  .footer-nav a { font-size: 0.78rem; color: #8b949e; text-decoration: none; display: flex; align-items: center; gap: 6px; transition: color 0.2s; }
+  .footer-nav a:hover { color: #e6edf3; }
+  .footer-nav .next-btn { color: #58a6ff; font-weight: 600; }
+  .footer-nav .next-btn:hover { color: #79c0ff; }
+  .footer-center { font-size: 0.68rem; color: #484f58; }
+</style>
+</head>
+<body>
+
+<!-- ─── SITE HEADER ─── -->
+<header class="site-header">
+  <a class="logo" href="#">
+    <span>🦀</span> Claw Code Academy
+  </a>
+  <div class="course-title">Build Your Own Local Clawd</div>
+  <div class="header-right">
+    <nav>
+      <a href="https://github.com/ultraworkers/claw-code" target="_blank">GitHub</a>
+    </nav>
+    <button class="info-btn" onclick="document.body.classList.toggle('panel-open')" title="Lesson info">ⓘ</button>
+  </div>
+</header>
+
+<!-- ─── LEFT SIDEBAR ─── -->
+<aside class="sidebar">
+  <div class="sidebar-heading">Your Progress</div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar"><div class="progress-fill"></div></div>
+    <div class="progress-label">1 of 7 acts</div>
+  </div>
+
+  <div class="sidebar-heading">Chapters</div>
+  <ul class="chapter-list">
+    <li class="active">
+      <a href="#">
+        <span class="ch-icon">📐</span>
+        <div class="ch-text">
+          <span class="ch-act">Act 1</span>
+          <span class="ch-title">High-Level Architecture</span>
+          <span class="ch-status">● In progress</span>
+        </div>
+      </a>
+    </li>
+    <li>
+      <a href="#">
+        <span class="ch-icon">💬</span>
+        <div class="ch-text">
+          <span class="ch-act">Act 2</span>
+          <span class="ch-title">Talk to the LLM</span>
+          <span class="ch-status">○ Not started</span>
+        </div>
+      </a>
+    </li>
+    <li>
+      <a href="#">
+        <span class="ch-icon">🔧</span>
+        <div class="ch-text">
+          <span class="ch-act">Act 3</span>
+          <span class="ch-title">Give It Hands (Tools)</span>
+          <span class="ch-status">○ Not started</span>
+        </div>
+      </a>
+    </li>
+    <li>
+      <a href="#">
+        <span class="ch-icon">🦀</span>
+        <div class="ch-text">
+          <span class="ch-act">Act 4</span>
+          <span class="ch-title">Build Local Clawd</span>
+          <span class="ch-status">○ Not started</span>
+        </div>
+      </a>
+    </li>
+    <li>
+      <a href="#">
+        <span class="ch-icon">🔍</span>
+        <div class="ch-text">
+          <span class="ch-act">Act 5</span>
+          <span class="ch-title">Reverse Engineer the Real Thing</span>
+          <span class="ch-status">○ Not started</span>
+        </div>
+      </a>
+    </li>
+    <li>
+      <a href="#">
+        <span class="ch-icon">⚡</span>
+        <div class="ch-text">
+          <span class="ch-act">Act 6</span>
+          <span class="ch-title">Go Deeper (Internals)</span>
+          <span class="ch-status">○ Not started</span>
+        </div>
+      </a>
+    </li>
+    <li>
+      <a href="#">
+        <span class="ch-icon">🚀</span>
+        <div class="ch-text">
+          <span class="ch-act">Act 7</span>
+          <span class="ch-title">Make It Yours</span>
+          <span class="ch-status">○ Not started</span>
+        </div>
+      </a>
+    </li>
+  </ul>
+</aside>
+
+<!-- ─── MAIN CONTENT ─── -->
+<div class="content">
+
+  <section class="hero">
+    <div class="breadcrumb">
+      <a href="#">Home</a><span>/</span><a href="#">Act 1</a><span>/</span>High-Level Architecture
+    </div>
+    <h1>How <em>Claude Code</em> Works — The Big Picture</h1>
+    <p>Every AI coding agent is just 3 pieces and a loop. Let's see it.</p>
+    <div class="lesson-meta">
+      <span class="meta-tag">⏱ 5 min</span>
+      <span class="meta-tag">📐 Visual lesson</span>
+      <span class="meta-tag">🟢 Beginner</span>
+    </div>
+  </section>
+
+  <div class="lesson">
+
+    <div class="section-label">The 3 Pieces</div>
+
+    <!-- 3 boxes with tooltip animation zone -->
+    <div class="flow-zone" id="flowZone" style="position:relative;">
+      <div class="flow" style="margin-bottom:0;">
+        <div class="box you" id="boxYou">
+          <div class="icon">👤</div>
+          <h2>You</h2>
+          <p>Type a question<br>in the terminal</p>
+        </div>
+        <div class="arrow" id="arrow1">
+          <div class="arrow-line">──────▶</div>
+          <div class="arrow-label">your question</div>
+        </div>
+        <div class="box agent" id="boxAgent">
+          <div class="icon">🐍</div>
+          <h2>AI Agent</h2>
+          <p><span style="font-size:0.68rem;color:#f0883e;opacity:0.7">chat.py</span><br>sends HTTP POST</p>
+        </div>
+        <div class="arrow" id="arrow2">
+          <div class="arrow-line">──────▶</div>
+          <div class="arrow-label">question</div>
+        </div>
+        <div class="box llm" id="boxLlm">
+          <div class="icon">🧠</div>
+          <h2>Local LLM</h2>
+          <p><span style="font-size:0.68rem;color:#a371f7;opacity:0.7">Ollama + qwen2.5:7b</span><br>thinks &amp; responds</p>
+        </div>
+      </div>
+      <div class="msg-tooltip" id="msgTooltip"></div>
+    </div>
+
+    <!-- Chat input -->
+    <div class="chat-input-wrap">
+      <input class="chat-input" id="chatInput" type="text" placeholder="Hi, Explain me how it works." autocomplete="off">
+      <button class="chat-send" id="chatSend" title="Send">↵</button>
+    </div>
+
+    <div class="takeaway" style="margin-top:48px;">
+      <h4>🦀 Takeaway</h4>
+      <p>Every AI coding agent — Claude Code, Cursor, Copilot — is this same pattern: a brain that thinks, tools that do, and a loop that repeats. In the next act, you'll talk to the brain directly. By Act 4, you'll have built your own <strong style="color:#58a6ff">Local Clawd</strong>.</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ─── RIGHT PANEL (ⓘ) ─── -->
+<aside class="panel">
+  <h2>🦀 Lesson Notes</h2>
+
+  <div class="panel-section">
+    <h3>Source Code</h3>
+    <p><a href="https://github.com/ultraworkers/claw-code" target="_blank" style="color:#58a6ff;text-decoration:none;">github.com/ultraworkers/claw-code</a><br><span style="font-size:0.65rem;color:#484f58;">The repo this course reverse-engineers</span></p>
+  </div>
+
+  <div class="panel-section">
+    <h3>What you're looking at</h3>
+    <p>This is the highest-level view of how Claude Code works. Three pieces, one loop. Everything else in this course is zooming into these boxes.</p>
+  </div>
+
+  <div class="panel-section">
+    <h3>The 3 pieces</h3>
+    <ul>
+      <li><strong style="color:#58a6ff">You</strong> — type in the terminal</li>
+      <li><strong style="color:#f0883e">AI Agent</strong> — orchestrates everything</li>
+      <li><strong style="color:#a371f7">Local LLM</strong> — the brain</li>
+    </ul>
+  </div>
+
+  <div class="panel-section">
+    <h3>Key insight</h3>
+    <p>The agent doesn't just chat — it <strong style="color:#3fb950">uses tools</strong>. It reads files, writes code, runs commands. The LLM decides when to use which tool.</p>
+  </div>
+
+  <div class="panel-section">
+    <h3>Stack</h3>
+    <div>
+      <span class="tag tag-blue">Python 3</span>
+      <span class="tag tag-purple">Ollama</span>
+      <span class="tag tag-green">qwen2.5:7b</span>
+      <span class="tag tag-orange">zero deps</span>
+    </div>
+  </div>
+
+  <div class="panel-section">
+    <h3>Try it yourself</h3>
+    <p style="font-family:monospace;color:#e6edf3;background:#0d1117;padding:8px 10px;border-radius:6px;font-size:0.72rem;">python3 chat.py</p>
+  </div>
+</aside>
+
+<!-- ─── FOOTER NAV ─── -->
+<footer class="footer-nav">
+  <a href="#" style="visibility:hidden;">← Previous</a>
+  <span class="footer-center">Act 1 of 7 — High-Level Architecture</span>
+  <a href="#" class="next-btn">Act 2: Talk to the LLM →</a>
+</footer>
+
+<script>
+(function() {
+  const input = document.getElementById('chatInput');
+  const sendBtn = document.getElementById('chatSend');
+  const zone = document.getElementById('flowZone');
+  const tooltip = document.getElementById('msgTooltip');
+  const youBox = document.getElementById('boxYou');
+  const agentBox = document.getElementById('boxAgent');
+  const llmBox = document.getElementById('boxLlm');
+  const arrow1 = document.getElementById('arrow1');
+  const arrow2 = document.getElementById('arrow2');
+  let animating = false;
+
+  // Pre-fill placeholder text on Enter if empty
+  function send() {
+    let text = input.value.trim();
+    if (animating) return;
+    if (!text) { text = input.placeholder; input.value = text; }
+    animating = true;
+    input.disabled = true;
+    sendBtn.disabled = true;
+    input.value = '';
+
+    tooltip.textContent = text;
+    const zoneRect = zone.getBoundingClientRect();
+    const youRect = youBox.getBoundingClientRect();
+    const agentRect = agentBox.getBoundingClientRect();
+    const llmRect = llmBox.getBoundingClientRect();
+
+    // Position above You box
+    const startX = youRect.left + youRect.width / 2 - zoneRect.left;
+    const startY = youRect.top - zoneRect.top - 36;
+    tooltip.style.left = startX + 'px';
+    tooltip.style.top = startY + 'px';
+    tooltip.style.transform = 'translateX(-50%)';
+    tooltip.style.transition = 'none';
+    tooltip.classList.add('show');
+
+    // Glow You
+    youBox.classList.add('glow-you');
+
+    // After a beat, fly to Agent
+    setTimeout(() => {
+      const midX = agentRect.left + agentRect.width / 2 - zoneRect.left;
+      const midY = agentRect.top - zoneRect.top - 36;
+      tooltip.style.transition = 'left 0.6s ease-in-out, top 0.6s ease-in-out';
+      tooltip.style.left = midX + 'px';
+      tooltip.style.top = midY + 'px';
+      arrow1.classList.add('lit');
+      youBox.classList.remove('glow-you');
+      agentBox.classList.add('glow-agent');
+    }, 800);
+
+    // Then fly to LLM
+    setTimeout(() => {
+      const endX = llmRect.left + llmRect.width / 2 - zoneRect.left;
+      const endY = llmRect.top - zoneRect.top - 36;
+      tooltip.style.left = endX + 'px';
+      tooltip.style.top = endY + 'px';
+      arrow2.classList.add('lit');
+      agentBox.classList.remove('glow-agent');
+      llmBox.classList.add('glow-llm');
+    }, 1800);
+
+    // Fade out and reset
+    setTimeout(() => {
+      tooltip.classList.remove('show');
+      llmBox.classList.remove('glow-llm');
+      arrow1.classList.remove('lit');
+      arrow2.classList.remove('lit');
+      animating = false;
+      input.disabled = false;
+      sendBtn.disabled = false;
+      input.focus();
+    }, 2800);
+  }
+
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
+  sendBtn.addEventListener('click', send);
+  sendBtn.classList.add('pulse');
+  input.addEventListener('input', () => {
+    if (input.value.trim()) sendBtn.classList.remove('pulse');
+    else sendBtn.classList.add('pulse');
+  });
+})();
+</script>
+
+</body>
+</html>
