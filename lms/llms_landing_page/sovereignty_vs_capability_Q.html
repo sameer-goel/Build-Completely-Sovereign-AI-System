@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sovereign Intelligence System — Sovereignty vs Capability</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d1117; color: #e6edf3; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; overflow-x: hidden; }
+
+  /* Header */
+  .header { position: fixed; top: 0; left: 0; right: 0; height: 48px; background: #161b22; border-bottom: 1px solid #30363d; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; z-index: 300; }
+  .header .logo { font-size: 0.85rem; font-weight: 600; color: #e6edf3; text-decoration: none; }
+  .header .nav-r a { font-size: 0.72rem; color: #8b949e; text-decoration: none; }
+
+  /* Progress dots */
+  .progress-dots { position: fixed; top: 48px; left: 0; right: 0; height: 36px; background: #0d1117; border-bottom: 1px solid #1c2128; display: flex; align-items: center; justify-content: center; gap: 8px; z-index: 200; }
+  .pdot { width: 10px; height: 10px; border-radius: 50%; background: #21262d; border: 2px solid #30363d; transition: all 0.4s; cursor: pointer; }
+  .pdot.active { background: #58a6ff; border-color: #58a6ff; box-shadow: 0 0 8px rgba(88,166,255,0.4); }
+  .pdot.done { background: #3fb950; border-color: #3fb950; }
+
+  /* Slides */
+  .slides { margin-top: 84px; scroll-snap-type: y mandatory; overflow-y: auto; height: calc(100vh - 84px); }
+  .slide { min-height: calc(100vh - 84px); scroll-snap-align: start; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 32px; }
+
+  /* ─── SLIDE 1: THE SCORE ─── */
+  .s-score .score-ring { position: relative; width: 180px; height: 180px; margin-bottom: 20px; }
+  .score-ring svg { transform: rotate(-90deg); }
+  .score-ring .bg { fill: none; stroke: #21262d; stroke-width: 8; }
+  .score-ring .fill { fill: none; stroke: #3fb950; stroke-width: 8; stroke-linecap: round; stroke-dasharray: 502; stroke-dashoffset: 502; transition: stroke-dashoffset 2s ease-out; }
+  .score-ring.animate .fill { stroke-dashoffset: 0; }
+  .score-num { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2.4rem; font-weight: 800; color: #3fb950; }
+  .score-num small { font-size: 1rem; color: #484f58; font-weight: 400; }
+  .s-score h1 { font-size: 1.4rem; text-align: center; margin-bottom: 6px; }
+  .s-score h1 em { font-style: normal; color: #3fb950; }
+  .s-score .sub { font-size: 0.85rem; color: #8b949e; text-align: center; max-width: 420px; }
+
+  /* ─── SLIDE 2: VOICES ─── */
+  .s-voices { gap: 16px; }
+  .s-voices h2 { font-size: 1.1rem; text-align: center; margin-bottom: 2px; }
+  .s-voices .sub { font-size: 0.78rem; color: #484f58; text-align: center; margin-bottom: 20px; }
+  .voice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 560px; width: 100%; position: relative; }
+  .voice { display: flex; align-items: flex-start; gap: 10px; background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 14px 14px; opacity: 0; transition: all 0.7s; }
+  .voice .v-avatar { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0; }
+  .v-nvidia { background: #1a2b1a; border: 1px solid #1f3f1f; }
+  .v-eu { background: #1a2332; border: 1px solid #1f3a5f; }
+  .v-mistral { background: #231a33; border: 1px solid #2f1f4f; }
+  .v-enterprise { background: #2b1f1a; border: 1px solid #3f2a1f; }
+  .voice .v-body { flex: 1; }
+  .voice .v-who { font-size: 0.62rem; color: #484f58; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .voice .v-text { font-size: 0.72rem; color: #8b949e; line-height: 1.45; }
+  /* Corner animations */
+  .voice.tl { transform: translate(-30px, -20px); }
+  .voice.tr { transform: translate(30px, -20px); }
+  .voice.bl { transform: translate(-30px, 20px); }
+  .voice.br { transform: translate(30px, 20px); }
+  .voice.show { opacity: 1; transform: translate(0, 0); }
+
+  /* Center summation card */
+  .voice-center { grid-column: 1 / -1; display: flex; align-items: flex-start; gap: 12px; background: #0d1117; border: 2px solid #30363d; border-radius: 14px; padding: 18px; opacity: 0; transform: scale(0.9); transition: all 0.8s; }
+  .voice-center.show { opacity: 1; transform: scale(1); border-color: #3fb950; box-shadow: 0 0 24px rgba(63,185,80,0.12); }
+  .voice-center .v-avatar { width: 36px; height: 36px; background: #122b12; border: 2px solid #3fb950; border-radius: 10px; font-size: 1rem; }
+  .voice-center .v-who { font-size: 0.65rem; color: #3fb950; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
+  .voice-center .v-text { font-size: 0.8rem; color: #e6edf3; line-height: 1.55; }
+  .voice-center .v-sub { font-size: 0.65rem; color: #484f58; margin-top: 4px; }
+
+  /* Connector lines */
+  .connectors { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+  .connectors line { stroke: #30363d; stroke-width: 1; stroke-dasharray: 4 4; opacity: 0; transition: opacity 0.6s; }
+  .connectors line.show { opacity: 0.5; stroke: #3fb950; }
+
+
+
+  /* ─── SLIDE 4: SOVEREIGNTY SLIDER ─── */
+  .s-slider { gap: 16px; }
+  .s-slider h2 { font-size: 1.1rem; text-align: center; margin-bottom: 4px; }
+  .s-slider .sub { font-size: 0.78rem; color: #484f58; text-align: center; margin-bottom: 20px; }
+  .sov-wrap { max-width: 540px; width: 100%; }
+
+  /* The 4 pillar boxes */
+  .pillar-row { display: flex; gap: 10px; margin-bottom: 20px; }
+  .pillar { flex: 1; border-radius: 12px; padding: 14px 10px; text-align: center; transition: all 0.5s; position: relative; overflow: hidden; }
+  .pillar .p-icon { font-size: 1.4rem; margin-bottom: 4px; transition: all 0.4s; }
+  .pillar .p-label { font-size: 0.68rem; font-weight: 600; margin-bottom: 2px; transition: color 0.4s; }
+  .pillar .p-where { font-size: 0.58rem; transition: color 0.4s; }
+  /* Cloud state (default) */
+  .pillar.cloud { background: #1c1215; border: 1px solid #3d2020; }
+  .pillar.cloud .p-label { color: #f85149; }
+  .pillar.cloud .p-where { color: #6e3630; }
+  /* Local state */
+  .pillar.local { background: #121d12; border: 1px solid #1f3f1f; box-shadow: 0 0 16px rgba(63,185,80,0.15); }
+  .pillar.local .p-label { color: #3fb950; }
+  .pillar.local .p-where { color: #2a6b2a; }
+  .pillar.local .p-icon { transform: scale(1.1); }
+
+  /* Data flow line */
+  .flow-line { display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 20px; height: 28px; }
+  .flow-line .fl-arrow { font-size: 0.7rem; transition: color 0.4s; }
+  .flow-line .fl-label { font-size: 0.65rem; font-weight: 600; padding: 3px 10px; border-radius: 6px; transition: all 0.4s; }
+  .fl-cloud { color: #f85149; }
+  .fl-local { color: #3fb950; }
+  .fl-label-cloud { background: #1c1215; color: #f85149; border: 1px solid #3d2020; }
+  .fl-label-local { background: #121d12; color: #3fb950; border: 1px solid #1f3f1f; }
+
+  /* The slider */
+  .sov-slider { width: 100%; -webkit-appearance: none; appearance: none; height: 8px; border-radius: 4px; outline: none; cursor: pointer; transition: background 0.3s; }
+  .sov-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; border-radius: 50%; background: #e6edf3; border: 3px solid #3fb950; cursor: pointer; box-shadow: 0 0 12px rgba(63,185,80,0.4); transition: border-color 0.3s; }
+  .sov-labels { display: flex; justify-content: space-between; margin-top: 6px; margin-bottom: 4px; }
+  .sov-labels span { font-size: 0.6rem; color: #484f58; }
+
+  /* Punchline */
+  .sov-punchline { text-align: center; min-height: 32px; font-size: 0.82rem; font-weight: 600; margin-top: 16px; opacity: 0; transition: opacity 0.5s; }
+  .sov-punchline.show { opacity: 1; }
+  .sov-punchline.red { color: #f85149; }
+  .sov-punchline.green { color: #3fb950; }
+
+  /* Unlock button */
+  .unlock-btn { display: block; margin: 20px auto 0; padding: 14px 36px; background: #21262d; border: 2px solid #30363d; color: #484f58; font-size: 0.9rem; font-weight: 600; border-radius: 12px; cursor: not-allowed; transition: all 0.5s; opacity: 0.4; }
+  .unlock-btn.active { background: linear-gradient(135deg, #3fb950, #58a6ff); border-color: transparent; color: #fff; cursor: pointer; opacity: 1; box-shadow: 0 6px 24px rgba(63,185,80,0.3); }
+  .unlock-btn.active:hover { transform: scale(1.05); }
+
+  /* Percentage display */
+  .sov-pct { text-align: center; font-size: 2rem; font-weight: 800; margin-bottom: 4px; transition: color 0.3s; }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <a class="logo" href="#">Sovereign Intelligence System</a>
+  <div class="nav-r"><a href="https://github.com/ultraworkers/claw-code" target="_blank">GitHub</a></div>
+</header>
+
+<nav class="progress-dots" id="progressDots">
+  <div class="pdot active" onclick="goSlide(0)"></div>
+  <div class="pdot" onclick="goSlide(1)"></div>
+  <div class="pdot" onclick="goSlide(2)"></div>
+</nav>
+
+<div class="slides" id="slides">
+
+  <!-- SLIDE 1: THE SCORE -->
+  <section class="slide s-score" id="slide0">
+    <div class="score-ring" id="scoreRing">
+      <svg width="180" height="180" viewBox="0 0 180 180">
+        <circle class="bg" cx="90" cy="90" r="80"/>
+        <circle class="fill" cx="90" cy="90" r="80"/>
+      </svg>
+      <div class="score-num">100<small>%</small></div>
+    </div>
+    <h1>Sovereignty: <em>100%</em></h1>
+    <p class="sub">Every capability is fully sovereign. No data leaves your machine. Ever. The only variable is how capable — and that's a slider.</p>
+  </section>
+
+  <!-- SLIDE 2: VOICES ON SOVEREIGN AI -->
+  <section class="slide s-voices" id="slide1">
+    <h2>What does "Sovereign AI" mean?</h2>
+    <p class="sub">The world is converging on one idea from different angles.</p>
+    <div class="voice-grid" id="voiceGrid">
+
+      <div class="voice tl" id="v0">
+        <div class="v-avatar v-nvidia">🟢</div>
+        <div class="v-body">
+          <div class="v-who">NVIDIA</div>
+          <div class="v-text">A nation's ability to produce AI using its own infrastructure, data, and workforce.</div>
+        </div>
+      </div>
+
+      <div class="voice tr" id="v1">
+        <div class="v-avatar v-eu">🇪🇺</div>
+        <div class="v-body">
+          <div class="v-who">EU / Gaia-X</div>
+          <div class="v-text">Data governance, processing, and training stay within jurisdictional boundaries.</div>
+        </div>
+      </div>
+
+      <div class="voice-center" id="vCenter">
+        <div class="v-avatar">∑</div>
+        <div class="v-body">
+          <div class="v-who">The common thread</div>
+          <div class="v-text">You own the data. You own the compute. You own the model. No one can shut you off. — We built exactly that, for individuals, on a laptop.</div>
+          <div class="v-sub">Data sovereignty + Compute sovereignty + Model sovereignty + Operational sovereignty</div>
+        </div>
+      </div>
+
+      <div class="voice bl" id="v2">
+        <div class="v-avatar v-mistral">🇫🇷</div>
+        <div class="v-body">
+          <div class="v-who">Mistral / France</div>
+          <div class="v-text">Models trained and hosted within national borders, independent of US hyperscalers.</div>
+        </div>
+      </div>
+
+      <div class="voice br" id="v3">
+        <div class="v-avatar v-enterprise">🏢</div>
+        <div class="v-body">
+          <div class="v-who">Enterprise IT</div>
+          <div class="v-text">AI on-prem or private cloud. Zero data exfiltration to third-party APIs.</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SLIDE 3: SOVEREIGNTY SLIDER -->
+  <section class="slide s-slider" id="slide2">
+    <h2>Drag to see what sovereignty looks like</h2>
+    <p class="sub">Move the slider from cloud-dependent to fully sovereign.</p>
+    <div class="sov-wrap">
+
+      <div class="sov-pct" id="sovPct" style="color:#f85149;">0%</div>
+
+      <div class="pillar-row" id="pillarRow">
+        <div class="pillar cloud" id="p0">
+          <div class="p-icon">☁️</div>
+          <div class="p-label">API</div>
+          <div class="p-where">cloud endpoint</div>
+        </div>
+        <div class="pillar cloud" id="p1">
+          <div class="p-icon">☁️</div>
+          <div class="p-label">Model</div>
+          <div class="p-where">vendor servers</div>
+        </div>
+        <div class="pillar cloud" id="p2">
+          <div class="p-icon">☁️</div>
+          <div class="p-label">Tools</div>
+          <div class="p-where">SaaS plugins</div>
+        </div>
+        <div class="pillar cloud" id="p3">
+          <div class="p-icon">☁️</div>
+          <div class="p-label">Data</div>
+          <div class="p-where">their servers</div>
+        </div>
+      </div>
+
+      <div class="flow-line" id="flowLine">
+        <span class="fl-arrow fl-cloud">↑</span>
+        <span class="fl-label fl-label-cloud" id="flLabel">data flows to www</span>
+        <span class="fl-arrow fl-cloud">↑</span>
+      </div>
+
+      <input type="range" class="sov-slider" id="sovSlider" min="0" max="100" value="0" oninput="updateSov()">
+      <div class="sov-labels">
+        <span>0% — Fully cloud</span>
+        <span>100% — Fully sovereign</span>
+      </div>
+
+      <div class="sov-punchline" id="sovPunch"></div>
+      <button class="unlock-btn" id="unlockBtn" onclick="goNext()">🔒 Drag to 100% to unlock</button>
+    </div>
+  </section>
+
+
+</div>
+
+<script>
+// ─── SLIDE NAV ───
+const dots = document.querySelectorAll('.pdot');
+function goSlide(i) { document.getElementById('slide'+i).scrollIntoView({behavior:'smooth'}); }
+
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      const i = parseInt(e.target.id.replace('slide',''));
+      dots.forEach((d,j) => {
+        d.classList.remove('active');
+        if (j < i) d.classList.add('done'); else d.classList.remove('done');
+        if (j === i) d.classList.add('active');
+      });
+      if (i === 0) animateScore();
+      if (i === 1) animateVoices();
+    }
+  });
+}, {threshold: 0.5});
+document.querySelectorAll('.slide').forEach(s => obs.observe(s));
+
+// ─── SCORE RING ───
+let scoreAnimated = false;
+function animateScore() {
+  if (scoreAnimated) return;
+  scoreAnimated = true;
+  setTimeout(() => document.getElementById('scoreRing').classList.add('animate'), 300);
+}
+
+// ─── VOICES ───
+let voicesAnimated = false;
+function animateVoices() {
+  if (voicesAnimated) return;
+  voicesAnimated = true;
+  // Four corners appear simultaneously from their corners
+  setTimeout(() => { document.getElementById('v0').classList.add('show'); }, 0);
+  setTimeout(() => { document.getElementById('v1').classList.add('show'); }, 300);
+  setTimeout(() => { document.getElementById('v2').classList.add('show'); }, 600);
+  setTimeout(() => { document.getElementById('v3').classList.add('show'); }, 900);
+  // Center summation appears last
+  setTimeout(() => { document.getElementById('vCenter').classList.add('show'); }, 1800);
+}
+
+// ─── SOVEREIGNTY SLIDER ───
+const pillars = [
+  { threshold: 25, id: 'p0', icon: '🏠', label: 'API', where: 'localhost:11434' },
+  { threshold: 50, id: 'p1', icon: '🧠', label: 'Model', where: 'your machine' },
+  { threshold: 75, id: 'p2', icon: '🛠️', label: 'Tools', where: 'Python stdlib' },
+  { threshold: 100, id: 'p3', icon: '🔒', label: 'Data', where: 'never leaves' },
+];
+
+function updateSov() {
+  const val = parseInt(document.getElementById('sovSlider').value);
+  const pct = document.getElementById('sovPct');
+  const flLabel = document.getElementById('flLabel');
+  const flArrows = document.querySelectorAll('.fl-arrow');
+  const punch = document.getElementById('sovPunch');
+  const slider = document.getElementById('sovSlider');
+
+  // Percentage display
+  pct.textContent = val + '%';
+  const r = Math.round(248 - (248 - 63) * (val / 100));
+  const g = Math.round(81 + (185 - 81) * (val / 100));
+  const b = Math.round(73 + (80 - 73) * (val / 100));
+  pct.style.color = `rgb(${r},${g},${b})`;
+
+  // Slider track color
+  slider.style.background = `linear-gradient(90deg, #f85149 0%, rgb(${r},${g},${b}) ${val}%, #21262d ${val}%)`;
+
+  // Flip pillars
+  pillars.forEach(p => {
+    const el = document.getElementById(p.id);
+    if (val >= p.threshold) {
+      el.classList.remove('cloud');
+      el.classList.add('local');
+      el.querySelector('.p-icon').textContent = p.icon;
+      el.querySelector('.p-where').textContent = p.where;
+    } else {
+      el.classList.remove('local');
+      el.classList.add('cloud');
+      el.querySelector('.p-icon').textContent = '\u2601\ufe0f';
+      el.querySelector('.p-where').textContent = ['cloud endpoint','vendor servers','SaaS plugins','their servers'][pillars.indexOf(p)];
+    }
+  });
+
+  // Flow line
+  if (val < 50) {
+    flLabel.textContent = 'data flows to www';
+    flLabel.className = 'fl-label fl-label-cloud';
+    flArrows.forEach(a => { a.textContent = '\u2191'; a.className = 'fl-arrow fl-cloud'; });
+  } else if (val < 100) {
+    flLabel.textContent = 'data staying local...';
+    flLabel.className = 'fl-label fl-label-local';
+    flArrows.forEach(a => { a.textContent = '\u21bb'; a.className = 'fl-arrow fl-local'; });
+  } else {
+    flLabel.textContent = 'localhost only';
+    flLabel.className = 'fl-label fl-label-local';
+    flArrows.forEach(a => { a.textContent = '\u2713'; a.className = 'fl-arrow fl-local'; });
+  }
+
+  // Punchline
+  if (val === 0) {
+    punch.textContent = 'Everything runs on someone else\u2019s computer.';
+    punch.className = 'sov-punchline show red';
+  } else if (val < 100) {
+    punch.textContent = 'Getting there... keep dragging.';
+    punch.className = 'sov-punchline show';
+    punch.style.color = `rgb(${r},${g},${b})`;
+  } else {
+    punch.textContent = 'This is what we built. \ud83e\udd80';
+    punch.className = 'sov-punchline show green';
+  }
+
+  // Unlock button
+  const ubtn = document.getElementById('unlockBtn');
+  if (val >= 100) {
+    ubtn.classList.add('active');
+    ubtn.textContent = 'See what we extracted →';
+  } else {
+    ubtn.classList.remove('active');
+    ubtn.textContent = '🔒 Drag to 100% to unlock';
+  }
+}
+function goNext() {
+  if (document.getElementById('sovSlider').value >= 100) {
+    window.location.href = 'what_we_extracted_Q.html';
+  }
+}
+</script>
+
+</body>
+</html>
