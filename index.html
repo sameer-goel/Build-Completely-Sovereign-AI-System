@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build a Completely Sovereign AI System</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d1117; color: #e6edf3; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; }
+  a { color: #58a6ff; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ─── HEADER ─── */
+  .header { position: sticky; top: 0; background: #161b22ee; backdrop-filter: blur(12px); border-bottom: 1px solid #30363d; padding: 0 24px; height: 52px; display: flex; align-items: center; justify-content: space-between; z-index: 100; }
+  .header .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 0.9rem; color: #e6edf3; }
+  .header .logo span { font-size: 1.3rem; }
+  .header nav { display: flex; gap: 20px; }
+  .header nav a { font-size: 0.78rem; color: #8b949e; }
+  .header nav a:hover { color: #e6edf3; text-decoration: none; }
+
+  /* ─── HERO ─── */
+  .hero { text-align: center; padding: 80px 24px 60px; max-width: 720px; margin: 0 auto; }
+  .hero .badge { display: inline-block; font-size: 0.7rem; padding: 4px 14px; border-radius: 20px; background: #1a2b1a; color: #3fb950; border: 1px solid #1f3f1f; margin-bottom: 20px; }
+  .hero h1 { font-size: 2.4rem; font-weight: 800; line-height: 1.25; margin-bottom: 16px; }
+  .hero h1 em { font-style: normal; background: linear-gradient(135deg, #58a6ff, #a371f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .hero .sub { font-size: 1.05rem; color: #8b949e; max-width: 540px; margin: 0 auto 32px; }
+  .hero-cta { display: inline-flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .btn { padding: 12px 32px; border-radius: 10px; font-size: 0.9rem; font-weight: 600; border: none; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-primary { background: linear-gradient(135deg, #3fb950, #58a6ff); color: #fff; }
+  .btn-primary:hover { box-shadow: 0 6px 20px rgba(63,185,80,0.3); }
+  .btn-secondary { background: #21262d; color: #e6edf3; border: 1px solid #30363d; }
+  .btn-secondary:hover { border-color: #58a6ff; }
+  .hero-tags { display: flex; gap: 8px; justify-content: center; margin-top: 24px; flex-wrap: wrap; }
+  .tag { font-size: 0.65rem; padding: 3px 10px; border-radius: 8px; }
+  .tag-g { background: #1a2b1a; color: #3fb950; }
+  .tag-b { background: #1a2332; color: #58a6ff; }
+  .tag-p { background: #231a33; color: #a371f7; }
+
+  /* ─── MENTAL MODEL ─── */
+  .mental-model { max-width: 680px; margin: 0 auto; padding: 40px 24px 60px; text-align: center; }
+  .mental-model h2 { font-size: 1.2rem; margin-bottom: 8px; color: #3fb950; }
+  .mental-model .mm-sub { font-size: 0.82rem; color: #8b949e; margin-bottom: 28px; }
+  .mm-diagram { background: #161b22; border: 1px solid #30363d; border-radius: 16px; padding: 32px 24px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.78rem; color: #8b949e; line-height: 1.8; white-space: pre; overflow-x: auto; text-align: left; display: inline-block; }
+  .mm-diagram .hl-blue { color: #58a6ff; }
+  .mm-diagram .hl-green { color: #3fb950; }
+  .mm-diagram .hl-purple { color: #a371f7; }
+
+  /* ─── SECTION TITLES ─── */
+  .section-title { text-align: center; padding: 60px 24px 32px; }
+  .section-title h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 8px; }
+  .section-title p { font-size: 0.88rem; color: #8b949e; max-width: 500px; margin: 0 auto; }
+
+  /* ─── CURRICULUM GRID ─── */
+  .curriculum { max-width: 800px; margin: 0 auto; padding: 0 24px 60px; }
+  .level-card { background: #161b22; border: 1px solid #30363d; border-radius: 14px; padding: 28px 28px 24px; margin-bottom: 16px; transition: border-color 0.3s, transform 0.2s; cursor: default; position: relative; overflow: hidden; }
+  .level-card:hover { border-color: #58a6ff; transform: translateY(-2px); }
+  .level-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; border-radius: 4px 0 0 4px; }
+  .level-card.lv1::before { background: #3fb950; }
+  .level-card.lv2::before { background: #58a6ff; }
+  .level-card.lv3::before { background: #a371f7; }
+  .level-card.lv4::before { background: #f0883e; }
+  .level-card.lv5::before { background: #f778ba; }
+  .level-card.lv6::before { background: #79c0ff; }
+  .level-card.lv7::before { background: #ffa657; }
+  .lv-header { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+  .lv-num { font-size: 0.65rem; font-weight: 700; padding: 3px 10px; border-radius: 8px; white-space: nowrap; }
+  .lv1 .lv-num { background: #1a2b1a; color: #3fb950; }
+  .lv2 .lv-num { background: #1a2332; color: #58a6ff; }
+  .lv3 .lv-num { background: #231a33; color: #a371f7; }
+  .lv4 .lv-num { background: #2b1d0e; color: #f0883e; }
+  .lv5 .lv-num { background: #2b1a24; color: #f778ba; }
+  .lv6 .lv-num { background: #162230; color: #79c0ff; }
+  .lv7 .lv-num { background: #2b1f0e; color: #ffa657; }
+  .lv-title { font-size: 1.05rem; font-weight: 700; }
+  .lv-body { font-size: 0.82rem; color: #8b949e; margin-bottom: 14px; line-height: 1.6; }
+  .lv-meta { display: flex; gap: 16px; flex-wrap: wrap; }
+  .lv-meta-item { font-size: 0.68rem; color: #484f58; display: flex; align-items: center; gap: 4px; }
+  .lv-meta-item .icon { font-size: 0.8rem; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="logo"><span>🦀</span> Sovereign AI System</div>
+  <nav>
+    <a href="#curriculum">Curriculum</a>
+    <a href="#philosophy">Philosophy</a>
+    <a href="https://github.com/sameer-goel/Build-Completely-Sovereign-AI-System" target="_blank">GitHub</a>
+  </nav>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="badge">🔓 100% Local · Zero Cloud · Zero API Keys</div>
+  <h1>Build a Completely<br><em>Sovereign AI System</em></h1>
+  <p class="sub">Reverse-engineer how AI coding agents work. Then build your own — from scratch — running entirely on your machine. No cloud, no subscriptions, no black boxes.</p>
+  <div class="hero-cta">
+    <button class="btn btn-primary" onclick="document.getElementById('curriculum').scrollIntoView({behavior:'smooth'})">Start the Course →</button>
+    <a class="btn btn-secondary" href="https://github.com/sameer-goel/Build-Completely-Sovereign-AI-System" target="_blank">View on GitHub</a>
+  </div>
+  <div class="hero-tags">
+    <span class="tag tag-g">🐍 Python 3</span>
+    <span class="tag tag-p">🦙 Ollama</span>
+    <span class="tag tag-b">⏱ ~3 hours total</span>
+    <span class="tag tag-g">🧠 qwen2.5:7b</span>
+  </div>
+</section>
+
+<!-- MENTAL MODEL -->
+<section class="mental-model">
+  <h2>The Core Insight</h2>
+  <p class="mm-sub">Every AI coding agent — Claude Code, Cursor, Copilot — is the same pattern:</p>
+  <div class="mm-diagram">
+<span class="hl-blue">┌──────────┐</span>     <span class="hl-purple">┌──────────────────┐</span>     <span class="hl-green">┌──────────┐</span>
+<span class="hl-blue">│   YOU    │</span>────▶<span class="hl-purple">│   BRAIN (LLM)   │</span>────▶<span class="hl-green">│  TOOLS   │</span>
+<span class="hl-blue">│ terminal │</span>     <span class="hl-purple">│ thinks, decides  │</span>     <span class="hl-green">│ read,write│</span>
+<span class="hl-blue">└──────────┘</span>     <span class="hl-purple">└──────────────────┘</span>     <span class="hl-green">└──────────┘</span>
+                        │    ▲
+                  <span class="hl-purple">decide</span> │    │ <span class="hl-green">result</span>
+                        ▼    │
+                 <span class="hl-green">┌──────────────────┐</span>
+                 <span class="hl-green">│  read_file       │</span>
+                 <span class="hl-green">│  write_file      │</span>
+                 <span class="hl-green">│  bash            │</span>
+                 <span class="hl-green">│  grep_search     │</span>
+                 <span class="hl-green">└──────────────────┘</span></div>
+  <p style="font-size:0.78rem;color:#484f58;margin-top:16px;">The brain thinks. The tools do. The loop repeats. That's the entire architecture.</p>
+</section>
+</body>
+</html>
+
+<!-- PHILOSOPHY -->
+<section class="section-title" id="philosophy">
+  <h2>🧭 Philosophy</h2>
+  <p>We don't just explain code. At every level you read the real codebase, build your own version, test it, and move on. Your agent grows with each level.</p>
+</section>
+
+<div style="max-width:680px;margin:0 auto;padding:0 24px 48px;">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">
+    <div style="background:#161b22;border:1px solid #30363d;border-radius:12px;padding:20px;text-align:center;">
+      <div style="font-size:1.6rem;margin-bottom:6px;">📖</div>
+      <div style="font-size:0.78rem;font-weight:600;margin-bottom:4px;">Reverse Engineer</div>
+      <div style="font-size:0.68rem;color:#8b949e;">Read the real codebase to understand what it does</div>
+    </div>
+    <div style="background:#161b22;border:1px solid #30363d;border-radius:12px;padding:20px;text-align:center;">
+      <div style="font-size:1.6rem;margin-bottom:6px;">🔨</div>
+      <div style="font-size:0.78rem;font-weight:600;margin-bottom:4px;">Build</div>
+      <div style="font-size:0.68rem;color:#8b949e;">Write your own version of that piece</div>
+    </div>
+    <div style="background:#161b22;border:1px solid #30363d;border-radius:12px;padding:20px;text-align:center;">
+      <div style="font-size:1.6rem;margin-bottom:6px;">🧪</div>
+      <div style="font-size:0.78rem;font-weight:600;margin-bottom:4px;">Test</div>
+      <div style="font-size:0.68rem;color:#8b949e;">Run the provided tests to verify it works</div>
+    </div>
+    <div style="background:#161b22;border:1px solid #30363d;border-radius:12px;padding:20px;text-align:center;">
+      <div style="font-size:1.6rem;margin-bottom:6px;">📝</div>
+      <div style="font-size:0.78rem;font-weight:600;margin-bottom:4px;">Checkpoint</div>
+      <div style="font-size:0.68rem;color:#8b949e;">Your agent now has a new capability</div>
+    </div>
+  </div>
+</div>
+
+<!-- CURRICULUM -->
+<section class="section-title" id="curriculum">
+  <h2>📚 The 7-Level Curriculum</h2>
+  <p>From "what is a coding agent?" to a fully working local agent you built yourself.</p>
+</section>
+
+<div class="curriculum">
+
+  <!-- Level 1 -->
+  <div class="level-card lv1">
+    <div class="lv-header">
+      <span class="lv-num">LEVEL 1</span>
+      <span class="lv-title">Understand What You're Building</span>
+    </div>
+    <div class="lv-body">No code yet. Understand the system you're going to reverse engineer. Learn the 3-box mental model: You → Brain → Tools → loop. Read the real codebase structure.</div>
+    <div class="lv-meta">
+      <span class="lv-meta-item"><span class="icon">📖</span> Read: README.md, CLAW.md, PARITY.md</span>
+      <span class="lv-meta-item"><span class="icon">🎯</span> Outcome: Explain how Claude Code works in 30 seconds</span>
+    </div>
+  </div>
+
+  <!-- Level 2 -->
+  <div class="level-card lv2">
+    <div class="lv-header">
+      <span class="lv-num">LEVEL 2</span>
+      <span class="lv-title">Talk to the Brain</span>
+    </div>
+    <div class="lv-body">Build <code style="background:#21262d;padding:2px 6px;border-radius:4px;font-size:0.78rem;">ollama_client.py</code> — the module that talks to Ollama. Send messages, get responses. The magic is gone — it's just HTTP.</div>
+    <div class="lv-meta">
+      <span class="lv-meta-item"><span class="icon">🔨</span> Build: ollama_client.py</span>
+      <span class="lv-meta-item"><span class="icon">📖</span> Read: src/query_engine.py, rust/crates/api/</span>
+      <span class="lv-meta-item"><span class="icon">🎯</span> Outcome: Talk to a local LLM from your own code</span>
+    </div>
+  </div>
+
+  <!-- Level 3 -->
+  <div class="level-card lv3">
+    <div class="lv-header">
+      <span class="lv-num">LEVEL 3</span>
+      <span class="lv-title">Give It Hands</span>
+    </div>
+    <div class="lv-body">Build <code style="background:#21262d;padding:2px 6px;border-radius:4px;font-size:0.78rem;">tools.py</code> — 4 real tools: read_file, write_file, bash, grep_search. Define schemas, implement functions, wire up dispatch. Your LLM just read a file because it decided to.</div>
+    <div class="lv-meta">
+      <span class="lv-meta-item"><span class="icon">🔨</span> Build: tools.py (4 tools)</span>
+      <span class="lv-meta-item"><span class="icon">📖</span> Read: rust/crates/tools/src/lib.rs</span>
+      <span class="lv-meta-item"><span class="icon">🎯</span> Outcome: LLM can interact with your filesystem</span>
+    </div>
+  </div>
+
+  <!-- Level 4 -->
+  <div class="level-card lv4">
+    <div class="lv-header">
+      <span class="lv-num">LEVEL 4</span>
+      <span class="lv-title">The Agent Loop</span>
+    </div>
+    <div class="lv-body">The big one. Build <code style="background:#21262d;padding:2px 6px;border-radius:4px;font-size:0.78rem;">agent.py</code> and <code style="background:#21262d;padding:2px 6px;border-radius:4px;font-size:0.78rem;">__main__.py</code>. Wire brain + hands together. After this level, <code style="background:#21262d;padding:2px 6px;border-radius:4px;font-size:0.78rem;">python3 -m local_clawd</code> launches YOUR coding agent.</div>
+    <div class="lv-meta">
+      <span class="lv-meta-item"><span class="icon">🔨</span> Build: agent.py, __main__.py</span>
+      <span class="lv-meta-item"><span class="icon">📖</span> Read: rust/crates/runtime/src/conversation.rs</span>
+      <span class="lv-meta-item"><span class="icon">🎯</span> Outcome: A working coding agent you built</span>
+    </div>
+  </div>
+
+  <!-- Level 5 -->
+  <div class="level-card lv5">
+    <div class="lv-header">
+      <span class="lv-num">LEVEL 5</span>
+      <span class="lv-title">Remember and Adapt</span>
+    </div>
+    <div class="lv-body">Build <code style="background:#21262d;padding:2px 6px;border-radius:4px;font-size:0.78rem;">session.py</code> and <code style="background:#21262d;padding:2px 6px;border-radius:4px;font-size:0.78rem;">config.py</code>. Save and resume conversations. Detect your project's tech stack. Load CLAW.md for project-aware context.</div>
+    <div class="lv-meta">
+      <span class="lv-meta-item"><span class="icon">🔨</span> Build: session.py, config.py</span>
+      <span class="lv-meta-item"><span class="icon">📖</span> Read: src/session_store.py, rust/crates/runtime/src/config.rs</span>
+      <span class="lv-meta-item"><span class="icon">🎯</span> Outcome: Agent remembers conversations and knows your project</span>
+    </div>
+  </div>
+
+  <!-- Level 6 -->
+  <div class="level-card lv6">
+    <div class="lv-header">
+      <span class="lv-num">LEVEL 6</span>
+      <span class="lv-title">Stream and Understand</span>
+    </div>
+    <div class="lv-body">Build <code style="background:#21262d;padding:2px 6px;border-radius:4px;font-size:0.78rem;">streaming.py</code>. Print tokens as they arrive instead of waiting for the full response. Understand tokenization, inference, KV cache, and what happens inside Ollama.</div>
+    <div class="lv-meta">
+      <span class="lv-meta-item"><span class="icon">🔨</span> Build: streaming.py</span>
+      <span class="lv-meta-item"><span class="icon">📖</span> Read: rust/crates/api/src/sse.rs</span>
+      <span class="lv-meta-item"><span class="icon">🎯</span> Outcome: Real-time streaming + deep model understanding</span>
+    </div>
+  </div>
+
+  <!-- Level 7 -->
+  <div class="level-card lv7">
+    <div class="lv-header">
+      <span class="lv-num">LEVEL 7</span>
+      <span class="lv-title">Production Patterns</span>
+    </div>
+    <div class="lv-body">Build <code style="background:#21262d;padding:2px 6px;border-radius:4px;font-size:0.78rem;">permissions.py</code> and <code style="background:#21262d;padding:2px 6px;border-radius:4px;font-size:0.78rem;">commands.py</code>. Add permission tiers, context compaction, MCP integration, plugin system, error handling, and cost tracking. From toy to production.</div>
+    <div class="lv-meta">
+      <span class="lv-meta-item"><span class="icon">🔨</span> Build: permissions.py, commands.py</span>
+      <span class="lv-meta-item"><span class="icon">📖</span> Read: Full architecture comparison</span>
+      <span class="lv-meta-item"><span class="icon">🎯</span> Outcome: Production-grade local coding agent</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- WHAT YOU'LL BUILD -->
+<section class="section-title">
+  <h2>🏗️ What You'll Build</h2>
+  <p>10 files. Each maps to a real piece of the codebase. By the end, it's yours.</p>
+</section>
+
+<div style="max-width:600px;margin:0 auto;padding:0 24px 48px;">
+  <div style="background:#161b22;border:1px solid #30363d;border-radius:14px;padding:28px;font-family:'SF Mono','Fira Code',monospace;font-size:0.75rem;line-height:2;color:#8b949e;">
+    <span style="color:#e6edf3;">local_clawd/</span><br>
+    ├── __init__.py<br>
+    ├── __main__.py &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#58a6ff;">← python3 -m local_clawd</span><br>
+    ├── ollama_client.py &nbsp;&nbsp;&nbsp;<span style="color:#3fb950;">← Level 2: Talk to Ollama</span><br>
+    ├── tools.py &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#a371f7;">← Level 3: 4 real tools</span><br>
+    ├── agent.py &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#f0883e;">← Level 4: The agent loop</span><br>
+    ├── session.py &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#f778ba;">← Level 5: Save/resume</span><br>
+    ├── config.py &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#f778ba;">← Level 5: Project awareness</span><br>
+    ├── streaming.py &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#79c0ff;">← Level 6: Real-time tokens</span><br>
+    ├── permissions.py &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#ffa657;">← Level 7: Access control</span><br>
+    └── commands.py &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#ffa657;">← Level 7: Slash commands</span>
+  </div>
+</div>
+
+<!-- PREREQUISITES -->
+<section class="section-title">
+  <h2>⚡ Prerequisites</h2>
+  <p>Three things. That's it.</p>
+</section>
+
+<div style="max-width:600px;margin:0 auto;padding:0 24px 48px;">
+  <div style="background:#161b22;border:1px solid #30363d;border-radius:14px;padding:24px;font-family:'SF Mono','Fira Code',monospace;font-size:0.78rem;line-height:2.2;color:#8b949e;">
+    <span style="color:#3fb950;"># 1. Python 3.10+</span><br>
+    python3 --version<br><br>
+    <span style="color:#3fb950;"># 2. Ollama with a model</span><br>
+    ollama pull qwen2.5:7b<br>
+    ollama list<br><br>
+    <span style="color:#3fb950;"># 3. Curiosity</span><br>
+    <span style="color:#484f58;"># (already installed)</span>
+  </div>
+</div>
+
+<!-- WHO IS THIS FOR -->
+<section class="section-title">
+  <h2>🎯 Who Is This For</h2>
+</section>
+
+<div style="max-width:680px;margin:0 auto;padding:0 24px 60px;">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;">
+    <div style="background:#161b22;border:1px solid #30363d;border-radius:12px;padding:20px;">
+      <div style="font-size:0.82rem;font-weight:600;margin-bottom:6px;">🌱 Beginners</div>
+      <div style="font-size:0.75rem;color:#8b949e;">"Oh, THAT'S how AI coding agents work" — concepts click, the mystery dissolves.</div>
+    </div>
+    <div style="background:#161b22;border:1px solid #30363d;border-radius:12px;padding:20px;">
+      <div style="font-size:0.82rem;font-weight:600;margin-bottom:6px;">💻 Junior Developers</div>
+      <div style="font-size:0.75rem;color:#8b949e;">Build a working agent, understand tool calling, gain real confidence with AI systems.</div>
+    </div>
+    <div style="background:#161b22;border:1px solid #30363d;border-radius:12px;padding:20px;">
+      <div style="font-size:0.82rem;font-weight:600;margin-bottom:6px;">🏗️ Senior Engineers</div>
+      <div style="font-size:0.75rem;color:#8b949e;">See the architecture patterns, understand the design decisions, fork and extend.</div>
+    </div>
+    <div style="background:#161b22;border:1px solid #30363d;border-radius:12px;padding:20px;">
+      <div style="font-size:0.82rem;font-weight:600;margin-bottom:6px;">🤔 Curious Minds</div>
+      <div style="font-size:0.75rem;color:#8b949e;">Enough understanding to have informed opinions about AI tools and sovereignty.</div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer style="border-top:1px solid #21262d;padding:32px 24px;text-align:center;">
+  <p style="font-size:0.72rem;color:#484f58;margin-bottom:8px;">Built by <a href="https://github.com/sameer-goel" style="color:#58a6ff;">Sam</a> · Contributors: Q (visual experience), Kiro (curriculum & code)</p>
+  <p style="font-size:0.65rem;color:#30363d;">You don't truly understand something until you can build it yourself.</p>
+</footer>
+
+</body>
+</html>
